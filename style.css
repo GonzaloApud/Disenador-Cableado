@@ -1,0 +1,163 @@
+:root {
+    --bg-color: #1a1a1a;
+    --panel-bg: #2d2d2d;
+    --text-color: #f0f0f0;
+    --accent-color: #00bcd4;
+    --border-color: #444;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --danger-color: #e53935;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#Controls_Container {
+    background-color: var(--panel-bg);
+    border-bottom: 2px solid var(--border-color);
+    padding: 10px 20px;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 15px;
+    z-index: 10;
+}
+
+.Input_Group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.Input_Group label {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #ccc;
+    white-space: nowrap;
+}
+
+.Input_Group input[type="number"], .Input_Group select {
+    background-color: #333;
+    border: 1px solid #555;
+    color: #fff;
+    padding: 6px;
+    border-radius: 4px;
+    width: 80px;
+}
+
+fieldset {
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 5px 10px;
+    color: #ccc;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin: 0;
+}
+
+legend {
+    color: var(--accent-color);
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.Button_Group {
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    background-color: var(--accent-color);
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+button:hover { background-color: #0097a7; }
+.Success_Button { background-color: #4CAF50; }
+.Success_Button:hover { background-color: #388E3C; }
+
+#Workspace_Area {
+    position: relative;
+    width: 100%;
+    flex-grow: 1;
+    background-color: #000;
+    overflow: auto;
+}
+
+#Wiring_Canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+    overflow: visible;
+}
+
+#Wiring_Canvas.Mode_Delete_Cable { pointer-events: auto; }
+.Svg_Cable { pointer-events: visibleStroke; }
+.Svg_Cable:hover { stroke-width: 6; cursor: pointer; }
+
+.Draggable_Component {
+    position: absolute;
+    border: 1px solid var(--border-color);
+    background: var(--panel-bg);
+    cursor: grab;
+    user-select: none;
+    z-index: 2;
+    color: var(--text-color);
+}
+
+.Draggable_Component:active { cursor: grabbing; }
+
+.Led_Screen_Grid {
+    display: grid;
+    gap: 2px;
+    background: #111;
+    padding: 2px;
+    border: 1px solid #333;
+}
+
+.Led_Module {
+    background: #404040;
+    border: 1px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 10px;
+}
+
+.Hardware_Node {
+    width: 100px;
+    height: 50px;
+    background: var(--panel-bg);
+    border: 1px solid var(--accent-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: var(--accent-color);
+}

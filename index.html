@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurador de Cableado</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div id="Controls_Container">
+        <div class="Input_Group">
+            <fieldset>
+                <legend>Acciones</legend>
+                <label><input type="radio" name="Application_Mode" value="Drag" checked> Drag & Drop</label>
+                <label><input type="radio" name="Application_Mode" value="Cable"> Poner Cables</label>
+                <label><input type="radio" name="Application_Mode" value="Delete_Cable"> Eliminar Cable</label>
+                <label><input type="radio" name="Application_Mode" value="Delete_Component"> Eliminar Componente</label>
+            </fieldset>
+        </div>
+
+        <div class="Input_Group">
+            <label>Ancho (m):</label>
+            <input type="number" id="Input_Width" value="3">
+        </div>
+        <div class="Input_Group">
+            <label>Alto (m):</label>
+            <input type="number" id="Input_Height" value="2">
+        </div>
+        <div class="Input_Group">
+            <label>Modulo:</label>
+            <select id="Select_Module">
+                <option value="50x50">50x50 cm</option>
+                <option value="100x50">100x50 cm</option>
+            </select>
+        </div>
+
+        <div class="Button_Group">
+            <button id="Button_Generate_Screen">Generar Pantalla</button>
+            <button id="Button_Add_Switch">Agregar switch</button>
+            <button id="Button_Add_Processor">Agregar procesador</button>
+        </div>
+        
+        <div class="Input_Group">
+            <fieldset>
+                <legend>Tipo de Cable</legend>
+                <label><input type="radio" name="Cable_Type" value="RJ45" checked> RJ45</label>
+                <label><input type="radio" name="Cable_Type" value="Fiber"> Fibra óptica</label>
+                <label><input type="radio" name="Cable_Type" value="Power"> Energía</label>
+            </fieldset>
+        </div>
+
+        <div class="Button_Group">
+            <button id="Button_Export_Pdf" class="Success_Button">Exportar PDF</button>
+        </div>
+    </div>
+
+    <div id="Workspace_Area">
+        <svg id="Wiring_Canvas">
+            <defs>
+                <marker id="Arrow_Head" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                    <path d="M0,0 L0,6 L9,3 z" fill="#000" />
+                </marker>
+            </defs>
+        </svg>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
