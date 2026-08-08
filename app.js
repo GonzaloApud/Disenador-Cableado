@@ -372,6 +372,41 @@ document.getElementById("Button_Export_Pdf").addEventListener("click", async () 
         );
         Context_2D.globalAlpha = 1.0;
 
+        const Legend_Width = 60 * Scale_Factor;
+        const Legend_Height = 38 * Scale_Factor;
+        const Legend_X = Canvas_Element.width/2 - Legend_Width;
+        const Legend_Y = Canvas_Element.height/2;
+
+        Context_2D.fillStyle = "rgba(45, 45, 45, 0.9)";
+        Context_2D.strokeStyle = "#444444";
+        Context_2D.lineWidth = 1 * Scale_Factor;
+        Context_2D.fillRect(Legend_X, Legend_Y, Legend_Width, Legend_Height);
+        Context_2D.strokeRect(Legend_X, Legend_Y, Legend_Width, Legend_Height);
+
+        const Cables_Data = [
+            { Name: "RJ45", Color: "blue" },
+            { Name: "Fibra óptica", Color: "orange" },
+            { Name: "Energía", Color: "red" }
+        ];
+
+        Context_2D.font = `${5 * Scale_Factor}px sans-serif`;
+        Context_2D.fillStyle = "#ffffff";
+        
+        Cables_Data.forEach((Cable, Index) => {
+            const Item_Y = Legend_Y + (9 * Scale_Factor) + (Index * 10 * Scale_Factor);
+            
+            Context_2D.fillText(Cable.Name, Legend_X + (5 * Scale_Factor), Item_Y);
+            
+            Context_2D.fillStyle = Cable.Color;
+            Context_2D.fillRect(
+                Legend_X + Legend_Width - (20 * Scale_Factor), 
+                Item_Y - (1.5 * Scale_Factor), 
+                14 * Scale_Factor, 
+                1.5 * Scale_Factor
+            );
+            Context_2D.fillStyle = "#ffffff";
+        });
+
         const Image_Data = Canvas_Element.toDataURL('image/jpeg', 1.0);
         const Orientation_Value = Canvas_Element.width > Canvas_Element.height ? 'landscape' : 'portrait';
         
