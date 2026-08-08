@@ -52,15 +52,14 @@ body {
     position: absolute;
     top: 15px;
     left: 15px;
-    opacity: 0.25;
+    opacity: 0.8;
     pointer-events: none;
     z-index: 8;
-    display: none;
 }
 
 #Pdf_Watermark img {
-    height: 40px;
-    width: auto;
+    width: 100px;
+    height: 100px;
     object-fit: contain;
 }
 

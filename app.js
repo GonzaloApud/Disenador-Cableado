@@ -329,9 +329,8 @@ document.getElementById("Button_Add_Processor").addEventListener("click", () => 
 
 document.getElementById("Button_Export_Pdf").addEventListener("click", async () => {
     const Element_To_Export = document.getElementById("Printable_Area");
-    
-    Watermark_Node.style.display = "block";
     const Original_Border = Element_To_Export.style.border;
+    
     Element_To_Export.style.border = "none";
     
     try {
@@ -351,11 +350,10 @@ document.getElementById("Button_Export_Pdf").addEventListener("click", async () 
         });
 
         Pdf_Document.addImage(Image_Data, 'JPEG', 0, 0, Canvas_Element.width, Canvas_Element.height);
-        Pdf_Document.save('Led_Screen_Diagram.pdf');
+        Pdf_Document.save('Diagrama-cableado.pdf');
     } catch (Export_Error) {
         console.log(`Error: ${Export_Error.message}`);
     } finally {
-        Watermark_Node.style.display = "none";
         Element_To_Export.style.border = Original_Border;
     }
 });
