@@ -36,6 +36,34 @@ body {
     z-index: 10;
 }
 
+.Logo_Container {
+    display: flex;
+    align-items: center;
+    margin-right: 5px;
+}
+
+#Brand_Logo {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+}
+
+#Pdf_Watermark {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 8;
+    display: none;
+}
+
+#Pdf_Watermark img {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+}
+
 .Input_Group {
     display: flex;
     align-items: center;
@@ -117,7 +145,6 @@ button:hover { background-color: #0097a7; }
 }
 
 #Wiring_Canvas.Mode_Delete_Cable { pointer-events: auto; }
-
 .Svg_Cable { pointer-events: none; }
 #Wiring_Canvas.Mode_Delete_Cable .Svg_Cable { pointer-events: visibleStroke; }
 #Wiring_Canvas.Mode_Delete_Cable .Svg_Cable:hover { stroke-width: 6; cursor: pointer; }

@@ -2,6 +2,7 @@ import { Module_50x50, Module_100x50, Hardware_Component } from './components.js
 
 const Workspace_Node = document.getElementById("Workspace_Area");
 const Canvas_Node = document.getElementById("Wiring_Canvas");
+const Watermark_Node = document.getElementById("Pdf_Watermark");
 const Cable_Configuration = {
     RJ45: { Color: "blue", Width: 2 },
     Fiber: { Color: "orange", Width: 2 },
@@ -316,6 +317,7 @@ document.getElementById("Button_Export_Pdf").addEventListener("click", () => {
 
     Element_To_Export.style.overflow = "visible";
     Element_To_Export.style.position = "static";
+    Watermark_Node.style.display = "block";
     
     Canvas_Element.style.width = `${Element_To_Export.scrollWidth}px`;
     Canvas_Element.style.height = `${Element_To_Export.scrollHeight}px`;
@@ -327,6 +329,7 @@ document.getElementById("Button_Export_Pdf").addEventListener("click", () => {
         html2canvas: { 
             scale: 2, 
             useCORS: true,
+            backgroundColor: '#000000',
             width: Element_To_Export.scrollWidth,
             height: Element_To_Export.scrollHeight,
             windowWidth: document.documentElement.scrollWidth,
@@ -338,6 +341,7 @@ document.getElementById("Button_Export_Pdf").addEventListener("click", () => {
     html2pdf().set(Export_Options).from(Element_To_Export).save().then(() => {
         Element_To_Export.style.overflow = Original_Overflow;
         Element_To_Export.style.position = Original_Position;
+        Watermark_Node.style.display = "none";
         Canvas_Element.style.width = Original_Width;
         Canvas_Element.style.height = Original_Height;
     });
