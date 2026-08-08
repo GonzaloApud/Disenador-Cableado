@@ -164,50 +164,51 @@ function Bind_Node_Events(Element_Target) {
     });
 
     Element_Target.addEventListener("mouseenter", () => {
-        if (Global_Mode === "Cable" && Wiring_State.Is_Drawing && Wiring_State.Last_Node !== Element_Target.id) {
-            const Selected_Cable = document.querySelector('input[name="Cable_Type"]:checked').value;
-            const Node_Origin = Wiring_State.Last_Node;
-            const Node_Destination = Element_Target.id;
+        if (!Wiring_State.Is_Drawing || Global_Mode !== "Cable") return;
+        if (!Wiring_State.Last_Node || Wiring_State.Last_Node === Element_Target.id) return;
 
-            if (Selected_Cable === "RJ45" || Selected_Cable === "Fiber") {
-                if (!Validate_Signal_Ports(Node_Origin)) {
-                    console.log(`Error: Signal port limit exceeded on node ${Node_Origin}. Maximum 2 active signal connections allowed.`);
-                    Wiring_State.Last_Node = Element_Target.id;
-                    return;
-                }
-                if (!Validate_Signal_Ports(Node_Destination)) {
-                    console.log(`Error: Signal port limit exceeded on node ${Node_Destination}. Maximum 2 active signal connections allowed.`);
-                    Wiring_State.Last_Node = Element_Target.id;
-                    return;
-                }
-            }
-
-            if (Selected_Cable === "Fiber") {
-                const Is_Module_Origin = Node_Origin.startsWith("Module_");
-                const Is_Module_Destination = Node_Destination.startsWith("Module_");
-                const Is_Switch_Origin = Node_Origin.startsWith("Switch_");
-                const Is_Switch_Destination = Node_Destination.startsWith("Switch_");
-                const Is_Processor_Origin = Node_Origin.startsWith("Processor_");
-                const Is_Processor_Destination = Node_Destination.startsWith("Processor_");
-
-                const Valid_Module_Switch = (Is_Module_Origin && Is_Switch_Destination) || (Is_Switch_Origin && Is_Module_Destination);
-                const Valid_Switch_Processor = (Is_Switch_Origin && Is_Processor_Destination) || (Is_Processor_Origin && Is_Switch_Destination);
-
-                if (!Valid_Module_Switch && !Valid_Switch_Processor) {
-                    console.log("Error: Topology violation. Fiber optics are restricted to Switch-Module and Processor-Switch configurations.");
-                    Wiring_State.Last_Node = Element_Target.id;
-                    return;
-                }
-            }
-
-            Active_Connections.push({
-                Start: Node_Origin,
-                End: Node_Destination,
-                Type: Selected_Cable
-            });
-            Wiring_State.Last_Node = Element_Target.id;
-            Render_Cables();
+        const Node_Origin_Element = document.getElementById(Wiring_State.Last_Node);
+        if (!Node_Origin_Element) {
+            Wiring_State.Is_Drawing = false;
+            Wiring_State.Last_Node = null;
+            return;
         }
+
+        const Selected_Cable = document.querySelector('input[name="Cable_Type"]:checked').value;
+        const Node_Origin = Wiring_State.Last_Node;
+        const Node_Destination = Element_Target.id;
+
+        if (Selected_Cable === "RJ45" || Selected_Cable === "Fiber") {
+            if (!Validate_Signal_Ports(Node_Origin) || !Validate_Signal_Ports(Node_Destination)) {
+                Wiring_State.Last_Node = Element_Target.id;
+                return;
+            }
+        }
+
+        if (Selected_Cable === "Fiber") {
+            const Is_Module_Origin = Node_Origin.startsWith("Module_");
+            const Is_Module_Destination = Node_Destination.startsWith("Module_");
+            const Is_Switch_Origin = Node_Origin.startsWith("Switch_");
+            const Is_Switch_Destination = Node_Destination.startsWith("Switch_");
+            const Is_Processor_Origin = Node_Origin.startsWith("Processor_");
+            const Is_Processor_Destination = Node_Destination.startsWith("Processor_");
+
+            const Valid_Module_Switch = (Is_Module_Origin && Is_Switch_Destination) || (Is_Switch_Origin && Is_Module_Destination);
+            const Valid_Switch_Processor = (Is_Switch_Origin && Is_Processor_Destination) || (Is_Processor_Origin && Is_Switch_Destination);
+
+            if (!Valid_Module_Switch && !Valid_Switch_Processor) {
+                Wiring_State.Last_Node = Element_Target.id;
+                return;
+            }
+        }
+
+        Active_Connections.push({
+            Start: Node_Origin,
+            End: Node_Destination,
+            Type: Selected_Cable
+        });
+        Wiring_State.Last_Node = Element_Target.id;
+        Render_Cables();
     });
 }
 
@@ -239,7 +240,7 @@ document.addEventListener("mouseup", () => {
     Wiring_State.Last_Node = null;
 });
 
-document.addEventListener("mouseleave", () => {
+Workspace_Node.addEventListener("mouseleave", () => {
     Drag_State.Is_Dragging = false;
     Drag_State.Target = null;
     Wiring_State.Is_Drawing = false;
@@ -267,6 +268,13 @@ document.getElementById("Button_Generate_Screen").addEventListener("click", () =
     Screen_Container.style.gridTemplateColumns = `repeat(${Columns}, 1fr)`;
     Screen_Container.style.left = "50px";
     Screen_Container.style.top = "50px";
+
+    Screen_Container.addEventListener("mouseleave", () => {
+        if (Global_Mode === "Cable" && Wiring_State.Is_Drawing) {
+            Wiring_State.Is_Drawing = false;
+            Wiring_State.Last_Node = null;
+        }
+    });
 
     for (let Index = 0; Index < (Columns * Rows); Index++) {
         Global_Component_Index++;
