@@ -1,6 +1,6 @@
 import { Module_50x50, Module_100x50, Hardware_Component } from './components.js';
 
-const Workspace_Node = document.getElementById("Workspace_Area");
+const Workspace_Node = document.getElementById("Printable_Area");
 const Canvas_Node = document.getElementById("Wiring_Canvas");
 const Watermark_Node = document.getElementById("Pdf_Watermark");
 const Cable_Configuration = {
@@ -30,8 +30,8 @@ document.querySelectorAll('input[name="Application_Mode"]').forEach(Radio_Input 
 });
 
 function Get_Connection_Coordinates(Node_Id, Cable_Type, Element_Rectangle, Workspace_Rectangle) {
-    let Coordinate_X = Element_Rectangle.left + (Element_Rectangle.width / 2) - Workspace_Rectangle.left + Workspace_Node.scrollLeft;
-    let Coordinate_Y = Element_Rectangle.top + (Element_Rectangle.height / 2) - Workspace_Rectangle.top + Workspace_Node.scrollTop;
+    let Coordinate_X = Element_Rectangle.left + (Element_Rectangle.width / 2) - Workspace_Rectangle.left;
+    let Coordinate_Y = Element_Rectangle.top + (Element_Rectangle.height / 2) - Workspace_Rectangle.top;
 
     if (Node_Id.startsWith("Module_")) {
         const Offset_Pixels = 8;
@@ -148,8 +148,8 @@ function Render_Cables() {
             const Module_Rectangle = Module_Node.getBoundingClientRect();
             const Workspace_Rectangle = Workspace_Node.getBoundingClientRect();
             
-            const Center_X = Module_Rectangle.left + (Module_Rectangle.width / 2) - Workspace_Rectangle.left + Workspace_Node.scrollLeft;
-            const Center_Y = Module_Rectangle.top + (Module_Rectangle.height / 2) - Workspace_Rectangle.top + Workspace_Node.scrollTop;
+            const Center_X = Module_Rectangle.left + (Module_Rectangle.width / 2) - Workspace_Rectangle.left;
+            const Center_Y = Module_Rectangle.top + (Module_Rectangle.height / 2) - Workspace_Rectangle.top;
             const Cross_Offset = 8;
 
             const Cross_Path_1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -247,8 +247,8 @@ function Bind_Drag_Event(Element_Target) {
 document.addEventListener("mousemove", (Event) => {
     if (!Drag_State.Is_Dragging || !Drag_State.Target) return;
     const Workspace_Rectangle = Workspace_Node.getBoundingClientRect();
-    const New_X = Event.clientX - Workspace_Rectangle.left - Drag_State.Offset_X + Workspace_Node.scrollLeft;
-    const New_Y = Event.clientY - Workspace_Rectangle.top - Drag_State.Offset_Y + Workspace_Node.scrollTop;
+    const New_X = Event.clientX - Workspace_Rectangle.left - Drag_State.Offset_X;
+    const New_Y = Event.clientY - Workspace_Rectangle.top - Drag_State.Offset_Y;
     
     Drag_State.Target.style.left = `${New_X}px`;
     Drag_State.Target.style.top = `${New_Y}px`;
@@ -327,43 +327,35 @@ document.getElementById("Button_Add_Processor").addEventListener("click", () => 
     Workspace_Node.appendChild(Processor_Instance.Element);
 });
 
-document.getElementById("Button_Export_Pdf").addEventListener("click", () => {
-    const Element_To_Export = document.getElementById("Workspace_Area");
-    const Canvas_Element = document.getElementById("Wiring_Canvas");
-
-    const Original_Overflow = Element_To_Export.style.overflow;
-    const Original_Position = Element_To_Export.style.position;
-    const Original_Width = Canvas_Element.style.width;
-    const Original_Height = Canvas_Element.style.height;
-
-    Element_To_Export.style.overflow = "visible";
-    Element_To_Export.style.position = "static";
+document.getElementById("Button_Export_Pdf").addEventListener("click", async () => {
+    const Element_To_Export = document.getElementById("Printable_Area");
+    
     Watermark_Node.style.display = "block";
+    const Original_Border = Element_To_Export.style.border;
+    Element_To_Export.style.border = "none";
     
-    Canvas_Element.style.width = `${Element_To_Export.scrollWidth}px`;
-    Canvas_Element.style.height = `${Element_To_Export.scrollHeight}px`;
-
-    const Export_Options = {
-        margin: 10,
-        filename: 'Led_Screen_Diagram.pdf',
-        image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { 
-            scale: 2, 
-            useCORS: true,
+    try {
+        const Canvas_Element = await html2canvas(Element_To_Export, {
+            scale: 2,
             backgroundColor: '#000000',
-            width: Element_To_Export.scrollWidth,
-            height: Element_To_Export.scrollHeight,
-            windowWidth: document.documentElement.scrollWidth,
-            windowHeight: document.documentElement.scrollHeight
-        },
-        jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
-    };
-    
-    html2pdf().set(Export_Options).from(Element_To_Export).save().then(() => {
-        Element_To_Export.style.overflow = Original_Overflow;
-        Element_To_Export.style.position = Original_Position;
+            useCORS: true
+        });
+
+        const Image_Data = Canvas_Element.toDataURL('image/jpeg', 1.0);
+        const Orientation_Value = Canvas_Element.width > Canvas_Element.height ? 'landscape' : 'portrait';
+        
+        const Pdf_Document = new window.jspdf.jsPDF({
+            orientation: Orientation_Value,
+            unit: 'px',
+            format: [Canvas_Element.width, Canvas_Element.height]
+        });
+
+        Pdf_Document.addImage(Image_Data, 'JPEG', 0, 0, Canvas_Element.width, Canvas_Element.height);
+        Pdf_Document.save('Led_Screen_Diagram.pdf');
+    } catch (Export_Error) {
+        console.log(`Error: ${Export_Error.message}`);
+    } finally {
         Watermark_Node.style.display = "none";
-        Canvas_Element.style.width = Original_Width;
-        Canvas_Element.style.height = Original_Height;
-    });
+        Element_To_Export.style.border = Original_Border;
+    }
 });

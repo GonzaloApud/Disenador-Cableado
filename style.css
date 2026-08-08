@@ -125,12 +125,23 @@ button:hover { background-color: #0097a7; }
 .Success_Button { background-color: #4CAF50; }
 .Success_Button:hover { background-color: #388E3C; }
 
-#Workspace_Area {
-    position: relative;
+#Workspace_Wrapper {
     width: 100%;
     flex-grow: 1;
-    background-color: #000;
+    background-color: var(--bg-color);
+    padding: 20px;
+    box-sizing: border-box;
     overflow: auto;
+}
+
+#Printable_Area {
+    position: relative;
+    width: 100%;
+    min-height: 100%;
+    background-color: #000000;
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 #Wiring_Canvas {

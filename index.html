@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LED Screen Wiring Configurator</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
+<body>
 <body>
     <div id="Controls_Container">
         <div class="Logo_Container">
@@ -59,17 +61,19 @@
         </div>
     </div>
 
-    <div id="Workspace_Area">
-        <div id="Pdf_Watermark">
-            <img src="./images/ISOTIPO-LEDSUPPORT-FULL-COLOR-WEB.svg" alt="LedSupport Watermark">
+    <div id="Workspace_Wrapper">
+        <div id="Printable_Area">
+            <div id="Pdf_Watermark">
+                <img src="./images/ISOTIPO-LEDSUPPORT-FULL-COLOR-WEB.svg" alt="LedSupport Watermark">
+            </div>
+            <svg id="Wiring_Canvas">
+                <defs>
+                    <marker id="Arrow_Head" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                        <path d="M0,0 L0,6 L9,3 z" fill="#000" />
+                    </marker>
+                </defs>
+            </svg>
         </div>
-        <svg id="Wiring_Canvas">
-            <defs>
-                <marker id="Arrow_Head" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-                    <path d="M0,0 L0,6 L9,3 z" fill="#000" />
-                </marker>
-            </defs>
-        </svg>
     </div>
 
     <script type="module" src="app.js"></script>
