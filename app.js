@@ -27,6 +27,35 @@ document.querySelectorAll('input[name="Application_Mode"]').forEach(Radio_Input 
     });
 });
 
+function Get_Connection_Coordinates(Node_Id, Cable_Type, Element_Rectangle, Workspace_Rectangle) {
+    let Coordinate_X = Element_Rectangle.left + (Element_Rectangle.width / 2) - Workspace_Rectangle.left + Workspace_Node.scrollLeft;
+    let Coordinate_Y = Element_Rectangle.top + (Element_Rectangle.height / 2) - Workspace_Rectangle.top + Workspace_Node.scrollTop;
+
+    if (Node_Id.startsWith("Module_")) {
+        const Offset_Pixels = 8;
+        if (Cable_Type === "Power") {
+            Coordinate_X += Offset_Pixels;
+            Coordinate_Y += Offset_Pixels;
+        } else {
+            Coordinate_X -= Offset_Pixels;
+            Coordinate_Y -= Offset_Pixels;
+        }
+    }
+
+    return { X: Coordinate_X, Y: Coordinate_Y };
+}
+
+function Validate_Signal_Ports(Node_Id) {
+    if (!Node_Id.startsWith("Module_")) return true;
+    let Active_Ports = 0;
+    Active_Connections.forEach(Connection => {
+        if ((Connection.Start === Node_Id || Connection.End === Node_Id) && (Connection.Type === "RJ45" || Connection.Type === "Fiber")) {
+            Active_Ports++;
+        }
+    });
+    return Active_Ports < 2;
+}
+
 function Render_Cables() {
     Canvas_Node.innerHTML = '<defs><marker id="Arrow_Head" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#fff" /></marker></defs>';
     
@@ -42,16 +71,14 @@ function Render_Cables() {
         const Rectangle_B = Node_B.getBoundingClientRect();
         const Workspace_Rectangle = Workspace_Node.getBoundingClientRect();
 
-        const Start_X = Rectangle_A.left + Rectangle_A.width / 2 - Workspace_Rectangle.left + Workspace_Node.scrollLeft;
-        const Start_Y = Rectangle_A.top + Rectangle_A.height / 2 - Workspace_Rectangle.top + Workspace_Node.scrollTop;
-        const End_X = Rectangle_B.left + Rectangle_B.width / 2 - Workspace_Rectangle.left + Workspace_Node.scrollLeft;
-        const End_Y = Rectangle_B.top + Rectangle_B.height / 2 - Workspace_Rectangle.top + Workspace_Node.scrollTop;
+        const Start_Coordinates = Get_Connection_Coordinates(Connection.Start, Connection.Type, Rectangle_A, Workspace_Rectangle);
+        const End_Coordinates = Get_Connection_Coordinates(Connection.End, Connection.Type, Rectangle_B, Workspace_Rectangle);
 
         const Line_Svg = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        Line_Svg.setAttribute("x1", Start_X);
-        Line_Svg.setAttribute("y1", Start_Y);
-        Line_Svg.setAttribute("x2", End_X);
-        Line_Svg.setAttribute("y2", End_Y);
+        Line_Svg.setAttribute("x1", Start_Coordinates.X);
+        Line_Svg.setAttribute("y1", Start_Coordinates.Y);
+        Line_Svg.setAttribute("x2", End_Coordinates.X);
+        Line_Svg.setAttribute("y2", End_Coordinates.Y);
         Line_Svg.setAttribute("stroke", Cable_Configuration[Connection.Type].Color);
         Line_Svg.setAttribute("stroke-width", Cable_Configuration[Connection.Type].Width);
         Line_Svg.setAttribute("class", "Svg_Cable");
@@ -69,6 +96,47 @@ function Render_Cables() {
         
         Canvas_Node.appendChild(Line_Svg);
     });
+
+    const All_Modules = document.querySelectorAll(".Led_Module");
+    All_Modules.forEach(Module_Node => {
+        let Rj45_Count = 0;
+        let Fiber_Count = 0;
+
+        Active_Connections.forEach(Connection => {
+            if (Connection.Start === Module_Node.id || Connection.End === Module_Node.id) {
+                if (Connection.Type === "RJ45") Rj45_Count++;
+                if (Connection.Type === "Fiber") Fiber_Count++;
+            }
+        });
+
+        if (Rj45_Count === 1 && Fiber_Count === 0) {
+            const Module_Rectangle = Module_Node.getBoundingClientRect();
+            const Workspace_Rectangle = Workspace_Node.getBoundingClientRect();
+            
+            const Center_X = Module_Rectangle.left + (Module_Rectangle.width / 2) - Workspace_Rectangle.left + Workspace_Node.scrollLeft;
+            const Center_Y = Module_Rectangle.top + (Module_Rectangle.height / 2) - Workspace_Rectangle.top + Workspace_Node.scrollTop;
+            const Cross_Offset = 8;
+
+            const Cross_Path_1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            Cross_Path_1.setAttribute("x1", Center_X - Cross_Offset);
+            Cross_Path_1.setAttribute("y1", Center_Y - Cross_Offset);
+            Cross_Path_1.setAttribute("x2", Center_X + Cross_Offset);
+            Cross_Path_1.setAttribute("y2", Center_Y + Cross_Offset);
+            Cross_Path_1.setAttribute("stroke", "red");
+            Cross_Path_1.setAttribute("stroke-width", "3");
+            
+            const Cross_Path_2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            Cross_Path_2.setAttribute("x1", Center_X + Cross_Offset);
+            Cross_Path_2.setAttribute("y1", Center_Y - Cross_Offset);
+            Cross_Path_2.setAttribute("x2", Center_X - Cross_Offset);
+            Cross_Path_2.setAttribute("y2", Center_Y + Cross_Offset);
+            Cross_Path_2.setAttribute("stroke", "red");
+            Cross_Path_2.setAttribute("stroke-width", "3");
+
+            Canvas_Node.appendChild(Cross_Path_1);
+            Canvas_Node.appendChild(Cross_Path_2);
+        }
+    });
 }
 
 function Bind_Node_Events(Element_Target) {
@@ -79,7 +147,7 @@ function Bind_Node_Events(Element_Target) {
             const Target_Element = Is_Container ? Element_Target : Element_Target.closest(".Draggable_Component");
             
             if (Target_Element) {
-                if (confirm("Seguro que quieres eliminar el compoente? Se eliminarán todos los cables conectados a él.")) {
+                if (confirm("Execute hardware deletion? All mapped topologies to this node will be severed.")) {
                     Target_Element.remove();
                     Active_Connections = Active_Connections.filter(Connection_Item => document.getElementById(Connection_Item.Start) && document.getElementById(Connection_Item.End));
                     Render_Cables();
@@ -98,9 +166,43 @@ function Bind_Node_Events(Element_Target) {
     Element_Target.addEventListener("mouseenter", () => {
         if (Global_Mode === "Cable" && Wiring_State.Is_Drawing && Wiring_State.Last_Node !== Element_Target.id) {
             const Selected_Cable = document.querySelector('input[name="Cable_Type"]:checked').value;
+            const Node_Origin = Wiring_State.Last_Node;
+            const Node_Destination = Element_Target.id;
+
+            if (Selected_Cable === "RJ45" || Selected_Cable === "Fiber") {
+                if (!Validate_Signal_Ports(Node_Origin)) {
+                    console.log(`Error: Signal port limit exceeded on node ${Node_Origin}. Maximum 2 active signal connections allowed.`);
+                    Wiring_State.Last_Node = Element_Target.id;
+                    return;
+                }
+                if (!Validate_Signal_Ports(Node_Destination)) {
+                    console.log(`Error: Signal port limit exceeded on node ${Node_Destination}. Maximum 2 active signal connections allowed.`);
+                    Wiring_State.Last_Node = Element_Target.id;
+                    return;
+                }
+            }
+
+            if (Selected_Cable === "Fiber") {
+                const Is_Module_Origin = Node_Origin.startsWith("Module_");
+                const Is_Module_Destination = Node_Destination.startsWith("Module_");
+                const Is_Switch_Origin = Node_Origin.startsWith("Switch_");
+                const Is_Switch_Destination = Node_Destination.startsWith("Switch_");
+                const Is_Processor_Origin = Node_Origin.startsWith("Processor_");
+                const Is_Processor_Destination = Node_Destination.startsWith("Processor_");
+
+                const Valid_Module_Switch = (Is_Module_Origin && Is_Switch_Destination) || (Is_Switch_Origin && Is_Module_Destination);
+                const Valid_Switch_Processor = (Is_Switch_Origin && Is_Processor_Destination) || (Is_Processor_Origin && Is_Switch_Destination);
+
+                if (!Valid_Module_Switch && !Valid_Switch_Processor) {
+                    console.log("Error: Topology violation. Fiber optics are restricted to Switch-Module and Processor-Switch configurations.");
+                    Wiring_State.Last_Node = Element_Target.id;
+                    return;
+                }
+            }
+
             Active_Connections.push({
-                Start: Wiring_State.Last_Node,
-                End: Element_Target.id,
+                Start: Node_Origin,
+                End: Node_Destination,
                 Type: Selected_Cable
             });
             Wiring_State.Last_Node = Element_Target.id;
@@ -131,6 +233,13 @@ document.addEventListener("mousemove", (Event) => {
 });
 
 document.addEventListener("mouseup", () => {
+    Drag_State.Is_Dragging = false;
+    Drag_State.Target = null;
+    Wiring_State.Is_Drawing = false;
+    Wiring_State.Last_Node = null;
+});
+
+document.addEventListener("mouseleave", () => {
     Drag_State.Is_Dragging = false;
     Drag_State.Target = null;
     Wiring_State.Is_Drawing = false;
@@ -174,7 +283,7 @@ document.getElementById("Button_Generate_Screen").addEventListener("click", () =
 
 document.getElementById("Button_Add_Switch").addEventListener("click", () => {
     Global_Component_Index++;
-    const Switch_Instance = new Hardware_Component("Switch", `Hardware_${Global_Component_Index}`);
+    const Switch_Instance = new Hardware_Component("Switch", `Switch_${Global_Component_Index}`);
     Bind_Drag_Event(Switch_Instance.Element);
     Bind_Node_Events(Switch_Instance.Element);
     Workspace_Node.appendChild(Switch_Instance.Element);
@@ -182,7 +291,7 @@ document.getElementById("Button_Add_Switch").addEventListener("click", () => {
 
 document.getElementById("Button_Add_Processor").addEventListener("click", () => {
     Global_Component_Index++;
-    const Processor_Instance = new Hardware_Component("Procesador", `Hardware_${Global_Component_Index}`);
+    const Processor_Instance = new Hardware_Component("Procesador", `Processor_${Global_Component_Index}`);
     Bind_Drag_Event(Processor_Instance.Element);
     Bind_Node_Events(Processor_Instance.Element);
     Workspace_Node.appendChild(Processor_Instance.Element);

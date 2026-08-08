@@ -117,8 +117,10 @@ button:hover { background-color: #0097a7; }
 }
 
 #Wiring_Canvas.Mode_Delete_Cable { pointer-events: auto; }
-.Svg_Cable { pointer-events: visibleStroke; }
-.Svg_Cable:hover { stroke-width: 6; cursor: pointer; }
+
+.Svg_Cable { pointer-events: none; }
+#Wiring_Canvas.Mode_Delete_Cable .Svg_Cable { pointer-events: visibleStroke; }
+#Wiring_Canvas.Mode_Delete_Cable .Svg_Cable:hover { stroke-width: 6; cursor: pointer; }
 
 .Draggable_Component {
     position: absolute;
