@@ -285,13 +285,25 @@ document.getElementById("Button_Generate_Screen").addEventListener("click", () =
         return;
     }
 
-    const Screen_Container = document.createElement("div");
-    Screen_Container.className = "Draggable_Component Led_Screen_Grid";
-    Screen_Container.style.gridTemplateColumns = `repeat(${Columns}, 1fr)`;
-    Screen_Container.style.left = "50px";
-    Screen_Container.style.top = "50px";
+    const Screen_Wrapper = document.createElement("div");
+    Screen_Wrapper.className = "Draggable_Component Screen_Wrapper";
+    Screen_Wrapper.style.left = "50px";
+    Screen_Wrapper.style.top = "50px";
 
-    Screen_Container.addEventListener("mouseleave", () => {
+    const Screen_Title = document.createElement("div");
+    Screen_Title.className = "Screen_Title";
+    Screen_Title.contentEditable = "true";
+    Screen_Title.innerText = "pantalla";
+
+    Screen_Title.addEventListener("mousedown", (Event) => {
+        Event.stopPropagation();
+    });
+
+    const Screen_Grid = document.createElement("div");
+    Screen_Grid.className = "Led_Screen_Grid";
+    Screen_Grid.style.gridTemplateColumns = `repeat(${Columns}, 1fr)`;
+
+    Screen_Wrapper.addEventListener("mouseleave", () => {
         if (Global_Mode === "Cable" && Wiring_State.Is_Drawing) {
             Wiring_State.Is_Drawing = false;
             Wiring_State.Last_Node = null;
@@ -303,12 +315,15 @@ document.getElementById("Button_Generate_Screen").addEventListener("click", () =
         const Module_Id = `Module_${Global_Component_Index}`;
         const Module_Instance = Module_Type === "100x50" ? new Module_100x50(Module_Id) : new Module_50x50(Module_Id);
         Bind_Node_Events(Module_Instance.Element);
-        Screen_Container.appendChild(Module_Instance.Element);
+        Screen_Grid.appendChild(Module_Instance.Element);
     }
 
-    Bind_Drag_Event(Screen_Container);
-    Bind_Node_Events(Screen_Container);
-    Workspace_Node.appendChild(Screen_Container);
+    Screen_Wrapper.appendChild(Screen_Title);
+    Screen_Wrapper.appendChild(Screen_Grid);
+
+    Bind_Drag_Event(Screen_Wrapper);
+    Bind_Node_Events(Screen_Wrapper);
+    Workspace_Node.appendChild(Screen_Wrapper);
 });
 
 document.getElementById("Button_Add_Switch").addEventListener("click", () => {
@@ -329,6 +344,7 @@ document.getElementById("Button_Add_Processor").addEventListener("click", () => 
 
 document.getElementById("Button_Export_Pdf").addEventListener("click", async () => {
     const Element_To_Export = document.getElementById("Printable_Area");
+    const Watermark_Image = document.querySelector("#Pdf_Watermark img");
     const Original_Border = Element_To_Export.style.border;
     
     Element_To_Export.style.border = "none";
@@ -339,6 +355,22 @@ document.getElementById("Button_Export_Pdf").addEventListener("click", async () 
             backgroundColor: '#000000',
             useCORS: true
         });
+
+        const Context_2D = Canvas_Element.getContext("2d");
+        const Scale_Factor = 2;
+        
+        const Offset_X = 15;
+        const Offset_Y = 50; 
+        
+        Context_2D.globalAlpha = 0.8;
+        Context_2D.drawImage(
+            Watermark_Image, 
+            Offset_X * Scale_Factor, 
+            Offset_Y * Scale_Factor, 
+            100 * Scale_Factor, 
+            100 * Scale_Factor
+        );
+        Context_2D.globalAlpha = 1.0;
 
         const Image_Data = Canvas_Element.toDataURL('image/jpeg', 1.0);
         const Orientation_Value = Canvas_Element.width > Canvas_Element.height ? 'landscape' : 'portrait';
