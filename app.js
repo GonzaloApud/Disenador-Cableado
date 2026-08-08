@@ -327,7 +327,7 @@ document.getElementById("Button_Export_Pdf").addEventListener("click", () => {
         html2canvas: { 
             scale: 2, 
             useCORS: true,
-            width: Element_To_Export.scrollWidth, 
+            width: Element_To_Export.scrollWidth,
             height: Element_To_Export.scrollHeight,
             windowWidth: document.documentElement.scrollWidth,
             windowHeight: document.documentElement.scrollHeight
