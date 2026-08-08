@@ -12,7 +12,7 @@ const Cable_Configuration = {
 let Global_Component_Index = 0;
 let Active_Connections = [];
 let Global_Mode = "Drag";
-let Wiring_State = { Is_Drawing: false, Last_Node: null };
+let Wiring_State = { Is_Drawing: false, Last_Node: null, Pending_Click_Node: null };
 let Drag_State = { Is_Dragging: false, Target: null, Offset_X: 0, Offset_Y: 0 };
 
 document.querySelectorAll('input[name="Application_Mode"]').forEach(Radio_Input => {
@@ -25,6 +25,7 @@ document.querySelectorAll('input[name="Application_Mode"]').forEach(Radio_Input 
         }
         Wiring_State.Is_Drawing = false;
         Wiring_State.Last_Node = null;
+        Wiring_State.Pending_Click_Node = null;
     });
 });
 
@@ -55,6 +56,39 @@ function Validate_Signal_Ports(Node_Id) {
         }
     });
     return Active_Ports < 2;
+}
+
+function Process_Connection(Node_Origin, Node_Destination) {
+    const Selected_Cable = document.querySelector('input[name="Cable_Type"]:checked').value;
+
+    if (Selected_Cable === "RJ45" || Selected_Cable === "Fiber") {
+        if (!Validate_Signal_Ports(Node_Origin) || !Validate_Signal_Ports(Node_Destination)) {
+            return;
+        }
+    }
+
+    if (Selected_Cable === "Fiber") {
+        const Is_Module_Origin = Node_Origin.startsWith("Module_");
+        const Is_Module_Destination = Node_Destination.startsWith("Module_");
+        const Is_Switch_Origin = Node_Origin.startsWith("Switch_");
+        const Is_Switch_Destination = Node_Destination.startsWith("Switch_");
+        const Is_Processor_Origin = Node_Origin.startsWith("Processor_");
+        const Is_Processor_Destination = Node_Destination.startsWith("Processor_");
+
+        const Valid_Module_Switch = (Is_Module_Origin && Is_Switch_Destination) || (Is_Switch_Origin && Is_Module_Destination);
+        const Valid_Switch_Processor = (Is_Switch_Origin && Is_Processor_Destination) || (Is_Processor_Origin && Is_Switch_Destination);
+
+        if (!Valid_Module_Switch && !Valid_Switch_Processor) {
+            return;
+        }
+    }
+
+    Active_Connections.push({
+        Start: Node_Origin,
+        End: Node_Destination,
+        Type: Selected_Cable
+    });
+    Render_Cables();
 }
 
 function Render_Cables() {
@@ -164,6 +198,23 @@ function Bind_Node_Events(Element_Target) {
         }
     });
 
+    Element_Target.addEventListener("dblclick", (Event) => {
+        if (Global_Mode !== "Cable") return;
+        Event.stopPropagation();
+
+        if (!Wiring_State.Pending_Click_Node) {
+            Wiring_State.Pending_Click_Node = Element_Target.id;
+        } else {
+            const Node_Origin = Wiring_State.Pending_Click_Node;
+            const Node_Destination = Element_Target.id;
+
+            if (Node_Origin !== Node_Destination) {
+                Process_Connection(Node_Origin, Node_Destination);
+            }
+            Wiring_State.Pending_Click_Node = null;
+        }
+    });
+
     Element_Target.addEventListener("mouseenter", () => {
         if (!Wiring_State.Is_Drawing || Global_Mode !== "Cable") return;
         if (!Wiring_State.Last_Node || Wiring_State.Last_Node === Element_Target.id) return;
@@ -175,41 +226,11 @@ function Bind_Node_Events(Element_Target) {
             return;
         }
 
-        const Selected_Cable = document.querySelector('input[name="Cable_Type"]:checked').value;
         const Node_Origin = Wiring_State.Last_Node;
         const Node_Destination = Element_Target.id;
 
-        if (Selected_Cable === "RJ45" || Selected_Cable === "Fiber") {
-            if (!Validate_Signal_Ports(Node_Origin) || !Validate_Signal_Ports(Node_Destination)) {
-                Wiring_State.Last_Node = Element_Target.id;
-                return;
-            }
-        }
-
-        if (Selected_Cable === "Fiber") {
-            const Is_Module_Origin = Node_Origin.startsWith("Module_");
-            const Is_Module_Destination = Node_Destination.startsWith("Module_");
-            const Is_Switch_Origin = Node_Origin.startsWith("Switch_");
-            const Is_Switch_Destination = Node_Destination.startsWith("Switch_");
-            const Is_Processor_Origin = Node_Origin.startsWith("Processor_");
-            const Is_Processor_Destination = Node_Destination.startsWith("Processor_");
-
-            const Valid_Module_Switch = (Is_Module_Origin && Is_Switch_Destination) || (Is_Switch_Origin && Is_Module_Destination);
-            const Valid_Switch_Processor = (Is_Switch_Origin && Is_Processor_Destination) || (Is_Processor_Origin && Is_Switch_Destination);
-
-            if (!Valid_Module_Switch && !Valid_Switch_Processor) {
-                Wiring_State.Last_Node = Element_Target.id;
-                return;
-            }
-        }
-
-        Active_Connections.push({
-            Start: Node_Origin,
-            End: Node_Destination,
-            Type: Selected_Cable
-        });
+        Process_Connection(Node_Origin, Node_Destination);
         Wiring_State.Last_Node = Element_Target.id;
-        Render_Cables();
     });
 }
 
